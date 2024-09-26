@@ -5,7 +5,12 @@ import vine from '@vinejs/vine'
  * a new rating.
  */
 export const createRatingValidator = vine.compile(
-  vine.object({})
+  vine.object({
+    user_id: vine.number(),
+    section_parkir_id: vine.number(),
+    rating: vine.number(),
+    review: vine.string()
+  })
 )
 
 /**
@@ -13,5 +18,10 @@ export const createRatingValidator = vine.compile(
  * an existing rating.
  */
 export const updateRatingValidator = vine.compile(
-  vine.object({})
+  vine.object({
+    user_id: vine.number(),
+    section_parkir_id: vine.number(),
+    rating: vine.number(),
+    review: vine.string()
+  })
 )

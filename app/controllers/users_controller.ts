@@ -7,12 +7,25 @@ export default class UsersController {
   public async index({  response }: HttpContext) {
     return response.status(200).json({ message: {
       status: 'succes',
-      data: await User.all()
+      data: await User.query().preload('kendaraan').exec()
     }})
   }
 
-  public async show({ response }: HttpContext) {
-    return response.status(200).json({ message: 'Hello World' })
+  public async show({ request, response }: HttpContext) {
+    if(request.params().id){
+      const user = await User.findBy('id', request
+      .params().id)
+      if (!user) {
+        return response.status(404).json({ message: {
+          status: 'error',
+          message: 'User not found'
+        }})
+      }
+      return response.status(200).json({ message: {
+        status: 'success',
+        data: user
+      }})
+    }
   }
 
   public async store({ request, response }: HttpContext) {

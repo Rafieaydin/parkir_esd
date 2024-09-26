@@ -21,7 +21,8 @@ export default class extends BaseSeeder {
         dateOfBirth: '1990-01-01',
         gender: 'L',
         password: 'password',
-        role: 'admin'
+        role: 'admin',
+        //photo: 'https://via.placeholder.com/150'
       },
       {
         fullName: 'Jane Doe',
@@ -30,7 +31,8 @@ export default class extends BaseSeeder {
         dateOfBirth: '1990-01-01',
         gender: 'P',
         password: 'password',
-        role: 'user'
+        role: 'user',
+         //photo: 'https://via.placeholder.com/150'
       },
       {
         fullName: 'admin',
@@ -39,7 +41,8 @@ export default class extends BaseSeeder {
         dateOfBirth: '1990-01-01',
         gender: 'L',
         password: 'password',
-        role: 'admin'
+        role: 'admin',
+         //photo: 'https://via.placeholder.com/150'
       }
     ])
     await TodoFactory.createMany(10)

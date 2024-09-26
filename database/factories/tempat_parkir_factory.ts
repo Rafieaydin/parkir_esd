@@ -6,6 +6,7 @@ export const TempatParkirFactory = factory
     return {
       nama: faker.lorem.words(3),
       alamat: faker.word.sample(['1','2','3','4','5']),
+      image: faker.image.url(),
       kapasitas: faker.number.int(20)
     }
   })

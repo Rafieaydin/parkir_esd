@@ -16,6 +16,9 @@ export default class TempatParkir extends BaseModel {
   @column()
   declare kapasitas: number
 
+  @column()
+  declare image: string
+
   @hasMany(() => SectionParkir, {
     foreignKey: 'tempat_parkir_id',
     localKey: 'id'

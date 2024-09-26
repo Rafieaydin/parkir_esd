@@ -6,6 +6,7 @@ import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import type { HasMany } from '@adonisjs/lucid/types/relations' // harus make type
 import Todo from './todo.js'
+import Kendaraan from './kendaraan.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -17,7 +18,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare id: number
 
   @column()
-  declare fullName: string | null
+  declare fullName: string
 
   @column()
   declare role: string | null
@@ -40,7 +41,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare email_code_verification: string | null
 
-  @column({ serializeAs: null })
+
+
+
+  //@column({ serializeAs: null })
+  @column({ serializeAs: 'password' })
   declare password: string
 
   @hasMany(() => Todo, {
@@ -48,6 +53,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
     localKey: 'id'
   })
   declare todos: HasMany<typeof Todo>
+
+  @hasMany(() => Kendaraan, {
+    foreignKey: 'user_id',
+    localKey: 'id'
+  })
+  declare kendaraan: HasMany<typeof Kendaraan>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

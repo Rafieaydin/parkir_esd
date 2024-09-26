@@ -4,6 +4,7 @@ import TempatParkir from './tempat_parkir.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import SlotParkir from './slot_parkir.js'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
+import Rating from './rating.js'
 
 
 
@@ -21,11 +22,13 @@ export default class SectionParkir extends BaseModel {
   declare tempat_parkir_id: number
 
   @column()
-  declare harga_per_menit: number
+  declare harga_per_jam: number
 
   @column()
-  declare denda_per_menit: number
+  declare denda_per_jam: number
 
+  @column()
+  declare promo : string
 
   @belongsTo(() => TempatParkir,{
     foreignKey: 'tempat_parkir_id'
@@ -37,6 +40,12 @@ export default class SectionParkir extends BaseModel {
     localKey: 'id'
   })
   declare slot_parkir: HasMany<typeof SlotParkir>
+
+  @hasMany(() => Rating, {
+    foreignKey: 'section_parkir_id',
+    localKey: 'id'
+  })
+  declare rating: HasMany<typeof Rating>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

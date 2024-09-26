@@ -5,6 +5,8 @@ import SlotBooking from "#models/slot_booking"
 import { DateTime } from 'luxon'
 import SlotParkir from '#models/slot_parkir'
 import { checBooingValidator, createBookingValidator } from '#validators/booking'
+import HistoryBooking from '#models/history_booking'
+import SectionParkir from '#models/section_parkir'
 
 export default class BookingsController {
 
@@ -15,12 +17,26 @@ export default class BookingsController {
     }})
   }
 
+  public async promo({response} : HttpContext){
+    const promo = await SectionParkir.query().where('promo', '>', 0).preload('tempat_parkir').preload('slot_parkir').exec()
+    if (!promo) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Promo Not Available'
+      }})
+    }
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: promo
+    }})
+  }
+
   public async Booking({ response, request }: HttpContext) {
     const { user_id, slot_parkir_id, kode_booking, tanggal_booking, denda, status, berapa_lama_jam } = request.all()
     await request.validateUsing(createBookingValidator)
     const booking = await Booking.findBy('kode_booking', kode_booking)
     const slot = await SlotParkir.query().where('id', 1).preload('section_parkir').exec()
-    //slot.map((s)=>s.section_parkir.harga_per_menit)
+    //slot.map((s)=>s.section_parkir.harga_per_jam)
     //console.log(typeof(slot))
     if (booking) {
       return response.status(400).json({ message: {
@@ -111,8 +127,9 @@ export default class BookingsController {
     }
 
     // Calculate the total payment and possible penalty
-    const harga_per_menit = slot[0].section_parkir.harga_per_menit
-    const denda_per_menit = slot[0].section_parkir.denda_per_menit
+    const harga_per_jam = slot[0].section_parkir.harga_per_jam
+    const denda_per_jam = slot[0].section_parkir.denda_per_jam
+    const promo = slot[0].section_parkir.promo
     console.log(typeof(slotBooking.check_in)) // datetime
     const checkInTime = DateTime.fromJSDate(slotBooking.check_in).setZone('Asia/Jakarta', { keepLocalTime: true })
     const now = DateTime.now().setZone('Asia/Jakarta')
@@ -128,24 +145,36 @@ export default class BookingsController {
       })
     }
 
-    const minutesParked =  Math.floor(checkInTime.diff(now, 'minutes').minutes) * -1
-    console.log("now:" + now.minute)
-    console.log("checkInTime:" + checkInTime.minute)
-    console.log("minutes:" +  minutesParked)
+    const hourParked =  Math.floor(checkInTime.diff(now, 'minutes').hours) * -1
+    console.log("now:" + now.hour)
+    console.log("checkInTime:" + checkInTime.hour)
+    console.log("hour:" +  hourParked)
     var total_bayar = 0
     var denda = 0
-    const allowedTimeMinutes = booking.berapa_lama_jam * 60
-    console.log("allowedTimeMinutes:" + allowedTimeMinutes)
-    if (minutesParked > allowedTimeMinutes) {
-      console.log("masuk")
-      denda = (minutesParked - allowedTimeMinutes) * denda_per_menit
-      total_bayar = ((minutesParked- (minutesParked -allowedTimeMinutes)) * harga_per_menit) + denda
-    }else {
-      total_bayar = minutesParked * harga_per_menit
+    if (hourParked > booking.berapa_lama_jam) {
+      denda = (hourParked - booking.berapa_lama_jam) * denda_per_jam
+      total_bayar = ((hourParked- (hourParked -booking.berapa_lama_jam)) * harga_per_jam) + denda
     }
-    console.log("time:" + (minutesParked - allowedTimeMinutes))
-    console.log("total_bayar:" + (minutesParked- (minutesParked -allowedTimeMinutes)) * harga_per_menit)
-    console.log("denda:" + denda)
+    else {
+      total_bayar = (hourParked < 1 ? 1 : hourParked) * harga_per_jam
+    }
+
+    if(promo > 0){
+      total_bayar = total_bayar - (total_bayar * promo)
+    }
+    // const minutesParked = checkInTime.diff(now, 'minutes').minutes
+    // const allowedTimeMinutes = booking.berapa_lama_jam * 60
+    // console.log("allowedTimeMinutes:" + allowedTimeMinutes)
+    // if (minutesParked > allowedTimeMinutes) {
+    //   console.log("masuk")
+    //   denda = (minutesParked - allowedTimeMinutes) * denda_per_jam
+    //   total_bayar = ((minutesParked- (minutesParked -allowedTimeMinutes)) * harga_per_jam) + denda
+    // }else {
+    //   total_bayar = minutesParked * harga_per_jam
+    // }
+    // console.log("harga:" + harga_per_jam)
+    // console.log("total_bayar:" + total_bayar)
+    // console.log("denda:" + denda)
 
     // Update the booking details
     booking.denda = denda
@@ -156,12 +185,60 @@ export default class BookingsController {
     await slotBooking.save()
     await booking.save()
 
+    const invoice = HistoryBooking.create({
+      slot_parkir_id: slotBooking.slot_parkir_id,
+      user_id: booking.user_id,
+      kode_booking: booking.kode_booking,
+      kode_invoice: booking.kode_booking,
+      judul_invoice: `Invoice for ${booking.kode_booking}`,
+      tanggal_booking: booking.tanggal_booking,
+      check_in: slotBooking.check_in,
+      check_out: slotBooking.check_out,
+      biaya: harga_per_jam,
+      is_checked_out: slotBooking.is_checked_out,
+      status: 'selesai',
+      denda: denda,
+      total_bayar_denda: denda,
+      total_bayar_semua: total_bayar,
+      berapa_lama_jam: booking.berapa_lama_jam,
+      //payment_id: ,
+    })
+    console.log((await invoice).id)
+
     return response.status(200).json({
       message: {
         status: 'success',
-        data: booking,
+        data: await HistoryBooking.query().where('id', (await invoice).id).preload('slot_parkir').preload('user').exec(),
       },
     })
+  }
+
+  async checkInList({ response }: HttpContext) {
+    const slotBooking = await SlotBooking.query().where('check_out', 0).preload('booking').preload('slot_parkir').exec()
+    if (!slotBooking) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Check In Not Available'
+      }})
+    }
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: slotBooking
+    }})
+  }
+
+  async checkOutList({ response }: HttpContext) {
+    const slotBooking = await SlotBooking.query().where('check_out','!=', 0).preload('booking').preload('slot_parkir').exec()
+    if (!slotBooking) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Check Out Not Available'
+      }})
+    }
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: slotBooking
+    }})
   }
 
   public async payment({ response, request }: HttpContext) {

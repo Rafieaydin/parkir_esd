@@ -1,38 +1,84 @@
+import Rating from '#models/rating'
+import { createRatingValidator } from '#validators/rating'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class RatingsController {
-  /**
-   * Display a list of resource
-   */
-  async index({}: HttpContext) {}
+  async index({ response }: HttpContext) {
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: await Rating.query().preload('user').preload('section_parkir').exec()
+    }})
+  }
 
-  /**
-   * Display form to create a new record
-   */
-  async create({}: HttpContext) {}
+  async store({ request, response }: HttpContext) {
+    const { user_id, section_parkir_id, rating, review } = request.all()
+    await request.validateUsing(createRatingValidator)
+    const newRating = await Rating.create({ user_id: user_id, section_parkir_id: section_parkir_id, rating: rating, review: review })
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: newRating
+    }})
+  }
 
-  /**
-   * Handle form submission for the create action
-   */
-  async store({ request }: HttpContext) {}
+  async show({ params, response }: HttpContext) {
+    const rating = await Rating.query().where('section_parkir_id', params.id).preload('user').preload('section_parkir').first()
+    if (!rating) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Rating Not Found'
+      }})
+    }
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: rating
+    }})
+  }
 
-  /**
-   * Show individual record
-   */
-  async show({ params }: HttpContext) {}
+  async update({ params, request, response }: HttpContext) {
+    const { rating, review } = request.all()
+    await request.validateUsing(createRatingValidator)
+    const ratingInstance = await Rating.find(params.id)
+    if (!ratingInstance) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Rating Not Found'
+      }})
+    }
+    ratingInstance.rating = rating
+    ratingInstance.review = review
+    await ratingInstance.save()
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: ratingInstance
+    }})
+  }
 
-  /**
-   * Edit individual record
-   */
-  async edit({ params }: HttpContext) {}
+  async destroy({ params, response }: HttpContext) {
+    const rating = await Rating.find(params.id)
+    if (!rating) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Rating Not Found'
+      }})
+    }
+    await rating.delete()
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: rating
+    }})
+  }
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request }: HttpContext) {}
-
-  /**
-   * Delete record
-   */
-  async destroy({ params }: HttpContext) {}
+  async ratingBySection({ params, response }: HttpContext) {
+    const rating = await Rating.query().where('section_parkir_id', params.id).exec()
+    if (!rating) {
+      return response.status(404).json({ message: {
+        status: 'error',
+        message: 'Rating Not Found'
+      }})
+    }
+    return response.status(200).json({ message: {
+      status: 'success',
+      data: rating
+    }})
+  }
 }

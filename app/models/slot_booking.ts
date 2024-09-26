@@ -1,5 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import Booking from './booking.js'
+import SlotParkir from './slot_parkir.js'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+
 
 export default class SlotBooking extends BaseModel {
   @column({ isPrimary: true })
@@ -25,4 +29,15 @@ export default class SlotBooking extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @belongsTo(() => SlotParkir,{
+    foreignKey: 'slot_parkir_id'
+  })
+  declare slot_parkir: BelongsTo<typeof SlotParkir>
+
+  @belongsTo(() => Booking,{
+    foreignKey: 'booking_id'
+  })
+  declare booking: BelongsTo<typeof Booking>
 }
+

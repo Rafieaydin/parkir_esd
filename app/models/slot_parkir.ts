@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import SectionParkir from './section_parkir.js'
-import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import SlotBooking from './slot_booking.js'
 import Booking from './booking.js'
 import HistoryBooking from './history_booking.js'
@@ -35,6 +35,12 @@ export default class SlotParkir extends BaseModel {
     foreignKey: 'section_parkir_id'
   })
   declare section_parkir: BelongsTo<typeof SectionParkir>
+
+  @hasMany(() => HistoryBooking, {
+    foreignKey: 'slot_parkir_id',
+      localKey: 'id'
+  })
+  declare history_booking: HasMany<typeof HistoryBooking>
 
   @manyToMany(()=> SlotParkir,{
     localKey: 'id',

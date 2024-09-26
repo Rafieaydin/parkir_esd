@@ -63,7 +63,7 @@ export default class AuthController {
   }
 
   public async register({request, response}:HttpContext){
-    const {fullname,email, password, repeat_password,role, phone,
+    const {fullName,email, password, repeat_password,role, phone,
       dateOfBirth, gender} = request.all()
     await request.validateUsing(registerValidator)
     const user = User.findBy('email', email)
@@ -77,7 +77,7 @@ export default class AuthController {
       })
     }
     if(password == repeat_password){
-      var users = await User.create({ fullName:fullname, email:email, password:password, role:role, phone:phone, dateOfBirth:dateOfBirth, gender:gender})
+      var users = await User.create({ fullName:fullName, email:email, password:password, role:role, phone:phone, dateOfBirth:dateOfBirth, gender:gender})
       var token = await User.accessTokens.create(users)
       return response.status(200).json({ message: {
         status: 'success',

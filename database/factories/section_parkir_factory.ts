@@ -8,8 +8,9 @@ export const SectionParkirFactory = factory
       nama: faker.word.words(3),
       tempat_parkir_id: faker.helpers.arrayElement([1,2,3,4,5]),
       jenis: faker.helpers.arrayElement(['mobil', 'motor']),
-      harga_per_menit: faker.number.int(100000),
-      denda_per_menit: faker.number.int(100000),
+      harga_per_jam: faker.number.int(100000),
+      denda_per_jam: faker.number.int(100000),
+      promo: "0"
       //createdAt: faker.date({ year: 2021 }),
     }
   })

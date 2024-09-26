@@ -17,8 +17,12 @@ import TempatParkirsController from '#controllers/tempat_parkirs_controller'
 import SectionTempatParkirsController from '#controllers/section_tempat_parkirs_controller'
 import SlotSectionTempatParkirsController from '#controllers/slot_section_tempat_parkirs_controller'
 import BookingsController from '#controllers/bookings_controller'
+import HistoriesController from '#controllers/histories_controller'
+import KendaraansController from '#controllers/kendaraans_controller'
+import RatingsController from '#controllers/ratings_controller'
 
-//router.get('/', [users_controller,'index'])
+router.get('/', [users_controller,'index'])
+//router.get('/:id', [users_controller,'show'])
 
 router.get('/email', async ({view}) => {
   return view.render('eemail_verification')
@@ -49,6 +53,9 @@ router.group(() => {
   router.post('section', [SectionTempatParkirsController,'store']);
   router.put('section/:id', [SectionTempatParkirsController,'update']);
   router.delete('section/:id/delete', [SectionTempatParkirsController,'destroy']);
+  router.get('section/parkir/:id', [SectionTempatParkirsController,'getSectionByTempatParkir']);
+  router.get('section/jenis',[SectionTempatParkirsController,'getJenisSection']);
+  router.get('section/jenis/:jenis',[SectionTempatParkirsController,'getSectionBySectionJenis']);
 
   router.get('section/slot', [SlotSectionTempatParkirsController,'index']);
   router.get('section/slot/find/:id', [SlotSectionTempatParkirsController,'show']);
@@ -59,10 +66,13 @@ router.group(() => {
 
 router.group(() => {
   router.get('/list/booking', [BookingsController,'list'])
+  router.get('/list/history', [HistoriesController,'History'])
+  router.get('/list/checkin', [BookingsController,'checkInList'])
+  router.get('/list/checkout', [BookingsController,'checkOutList'])
+  router.get('/list/promo', [BookingsController,'promo'])
   router.post('/booking', [BookingsController,'Booking'])
   router.post('/checkin', [BookingsController,'checkIn'])
   router.post('/checkout', [BookingsController,'checkOut'])
-  //router.get('/history', [BookingsController,'History'])
 }).use([middleware.auth({
   guards: ['api']
 }), middleware.admin()]);
@@ -76,6 +86,28 @@ router.group(() => {
 }).prefix('/users').use([middleware.auth({
   guards: ['api']
 }), middleware.admin()]);
+
+router.group(() => {
+  router.get('/', [KendaraansController,'index'])
+  router.get('/:id', [KendaraansController,'show'])
+  router.post('/', [KendaraansController,'store'])
+  router.put('/:id', [KendaraansController,'update'])
+  router.delete('/:id', [KendaraansController,'destroy'])
+}).prefix('/kendaraan').use([middleware.auth({
+  guards: ['api']
+}), middleware.admin()]);
+
+router.group(() => {
+  router.get('/',[RatingsController,'index'])
+  router.get('/:id',[RatingsController,'show'])
+  router.post('/',[RatingsController,'store'])
+  router.put('/:id',[RatingsController,'update'])
+  router.delete('/:id',[RatingsController,'destroy'])
+  router.get('/section/:id',[RatingsController,'ratingBySection'])
+}).prefix('/ratings').use([middleware.auth({
+  guards: ['api']
+}), middleware.admin()]);
+
 
 router.group(() => {
   router.get('/', [PostsController,'index'])
